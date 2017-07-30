@@ -1,23 +1,26 @@
-#include <aREST.h>
-#include "DHT.h"
-#define DHTPIN_A 2     // what digital pin we're connected to
-#define DHTPIN_B 4     // what digital pin we're connected to
+#include <dht11.h>
+dht11 DHT11;
 
-#define DHTTYPE DHT11   // DHT 21 (AM2301)
-DHT dht_a(DHTPIN_A, DHTTYPE);
-DHT dht_b(DHTPIN_B, DHTTYPE);
+// Entrées binaires
+#define DHT11_serre 2
+#define DHT11_ambiante 3
 
-// Capteurs
-const int pin_humidite = A0;  // Analog input pin that the potentiometer is attached to
-float humidite = 0;           // Valeur de l'humidité du sol
-int temperature;
-int temperature_b;
-int humidite_air;
-int humidite_air_b;
-int pinLuminosite=1; //autrement dit : A1
-int luminosite;
+// Entrées analogiques
+const int pin_humidite_sol = A0;
+const int pin_luminosite_ambiante = A1;
 
-// TEMPS
+// Sorties
+int pinRelais = 3;
+
+// Mesures
+float humidite_sol = 0;
+int temperature_serre = 0;
+int humidite_serre = 0;
+int temperature_ambiante = 0;
+int humidite_ambiante = 0;
+float luminosite_ambiante = 0;
+
+// Temp
 int toggle = 0;               // commute chaque seconde
 int compteurSec = 0;          // compteur de secondes
 int compteurCycles = 0;       // compteur de cycles total
@@ -28,49 +31,64 @@ const int STATE_MEAS = 1;
 const int STATE_WATER = 2;
 int state = STATE_WAITING;
 
-//relais
-int pinRelais = 3;
-void luminositeCapteur(){
-  luminosite = map(analogRead(pinLuminosite),8,800,0,100); //pourcentage entre les bornes
-  Serial.println((String)"luminosite: "+ luminosite);
-  //les 2 et 3 e valeur de map sont a changer en fonction de la luminosite de cet endroit
-}
-//captuer luminosite + temperature
-void humiditeCapteur(){
-  delay(1000);
-    humidite_air = dht_a.readHumidity();    
-    humidite_air_b = dht_b.readHumidity();    
 
-  // Read temperature as Celsius (the default)
-    temperature = dht_a.readTemperature();
-    temperature_b = dht_b.readTemperature();
-  Serial.println("-------------Capteur A-------------");
-
-   Serial.print("Humidity: ");
-  Serial.print(humidite_air);
-  Serial.println("");
-  Serial.print("Temperature: ");
-  Serial.print(temperature);
-  Serial.println(" *C ");
-    Serial.println("-------------FIN Capteur A-------------");
-
-  Serial.println("-------------Capteur B-------------");
-  Serial.print("Humidity: ");
-  Serial.print(humidite_air_b);
-  Serial.println("");
-  Serial.print("Temperature: ");
-  Serial.print(temperature_b);
-  Serial.println(" *C ");
-      Serial.println("-------------FIN Capteur B-------------");
-
-}
 
 void loop() {
-  commute();
   mesure();
-  humiditeCapteur();
-  luminositeCapteur();
+  Serial.print("Humidite sol = ");
+  Serial.println(humidite_sol);
+  Serial.print("Luminosité = ");
+  Serial.println(luminosite_ambiante);
+  
+  dht_serre();
+  Serial.println(humidite_serre);
+  Serial.println(temperature_serre);
+  dht_ambiante();
+  Serial.println(humidite_ambiante);
+  Serial.println(temperature_ambiante);
+  
+  fsm();
+  commute();
+}
 
+
+
+void mesure() {
+  float cur;
+  cur = map(analogRead(pin_humidite_sol), 0, 1023, 100, 0);
+  humidite_sol = (humidite_sol * 0.9) + (cur * 0.1);
+  cur = map(analogRead(pin_luminosite_ambiante), 0, 1023, 0, 100);
+  luminosite_ambiante = (luminosite_ambiante * 0.9) + (cur * 0.1);
+}
+
+// Humidité et température SERRE
+void dht_serre() {
+  int chk = DHT11.read(DHT11_serre);
+  if (chk == DHTLIB_OK) {
+      temperature_serre = (float)DHT11.temperature;
+      humidite_serre = (float)DHT11.humidity;
+  }
+  else { 
+    Serial.print("DHT serre : erreur : "); 
+    Serial.println(chk);
+  }  
+}
+
+
+// Humidité et température AMBIANTE
+void dht_ambiante() {
+  int chk = DHT11.read(DHT11_ambiante);
+  if (chk == DHTLIB_OK) {
+      temperature_ambiante = (float)DHT11.temperature;
+      humidite_ambiante = (float)DHT11.humidity;
+  }
+  else { 
+    Serial.print("DHT ambiante : erreur : "); 
+    Serial.println(chk);
+  }  
+}
+
+void fsm() {
   switch (state) {
 
     // Attente
@@ -79,7 +97,7 @@ void loop() {
       Serial.print(compteurCycles);
       Serial.print(" Attente... ");
       Serial.println(compteurSec);
-      if (compteurSec >= 20) {
+      if (compteurSec >= 3600) {
         compteurSec = 0;
         compteurCycles++;
         state = STATE_MEAS;
@@ -87,13 +105,9 @@ void loop() {
       break;
     }
 
-    // Mesurage sur base des dernières données
+    // Decision d'arrosage ou non à ce moment précis
     case STATE_MEAS : {
-      
-      Serial.print("\t humidite moyenne = ");
-      Serial.println(humidite);
-
-      if (humidite < 50) {
+      if (humidite_sol < 50) {
         state = STATE_WATER;
       }
       else {
@@ -111,7 +125,6 @@ void loop() {
         compteurSec = 0;
         state = STATE_WAITING;
         digitalWrite(pinRelais,HIGH);
-
       }
       break;
     }
@@ -119,26 +132,12 @@ void loop() {
       Serial.println("STATE DEFAULT");
     }
   } // switch
-    
-} // loop
-
-
-
-void mesure() {
-  float cur = map(analogRead(pin_humidite), 0, 1023, 100, 0);
-  humidite = (humidite * 0.9) + (cur * 0.1);
-  //Serial.print("cur = ");
-  //Serial.print(cur);
-  Serial.print("\t humidite moyenne = ");
-  Serial.println(humidite);
 }
 
 
+// Blink Alive et delay 1 seconde
 void commute() {
-  delay(1000);
   compteurSec++;
-
-  // Blink Alive
   if (toggle == 0) {
      toggle = 1;
      digitalWrite(LED_BUILTIN, HIGH);
@@ -147,14 +146,15 @@ void commute() {
     toggle = 0;
     digitalWrite(LED_BUILTIN, LOW);
   }
+  delay(1000);
 }
 
 
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT); // humidité A0
   Serial.begin(9600);
+  Serial.println("=========   Arduino Uno Wifi - Cambium   ==========");
+ 
+  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(pinRelais, OUTPUT);
-
-  Serial.println("=======   Arduino Uno Wifi - Cambium   ==========");
 }
 
