@@ -14,6 +14,8 @@ int temperature;
 int temperature_b;
 int humidite_air;
 int humidite_air_b;
+int pinLuminosite=1; //autrement dit : A1
+int luminosite;
 
 // TEMPS
 int toggle = 0;               // commute chaque seconde
@@ -28,6 +30,12 @@ int state = STATE_WAITING;
 
 //relais
 int pinRelais = 3;
+void luminositeCapteur(){
+  luminosite = map(analogRead(pinLuminosite),8,800,0,100); //pourcentage entre les bornes
+  Serial.println((String)"luminosite: "+ luminosite);
+  //les 2 et 3 e valeur de map sont a changer en fonction de la luminosite de cet endroit
+}
+//captuer luminosite + temperature
 void humiditeCapteur(){
   delay(1000);
     humidite_air = dht_a.readHumidity();    
@@ -61,6 +69,7 @@ void loop() {
   commute();
   mesure();
   humiditeCapteur();
+  luminositeCapteur();
 
   switch (state) {
 
