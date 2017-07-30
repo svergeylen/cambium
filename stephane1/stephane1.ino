@@ -32,7 +32,7 @@ int state = STATE_WAITING;
 int pinRelais = 3;
 void luminositeCapteur(){
   luminosite = map(analogRead(pinLuminosite),8,800,0,100); //pourcentage entre les bornes
-  Serial.println((String)"luminosite: "+ luminosite +" %");
+  Serial.println((String)"luminosite:"+ luminosite);
   //les 2 et 3 e valeur de map sont a changer en fonction de la luminosite de cet endroit
 }
 //captuer luminosite + temperature
@@ -44,28 +44,15 @@ void humiditeCapteur(){
   // Read temperature as Celsius (the default)
     temperature = dht_a.readTemperature();
     temperature_b = dht_b.readTemperature();
-  Serial.println("-------------Capteur A-------------");
-
-   Serial.print("Humidity: ");
-  Serial.print(humidite_air);
-  Serial.println("");
-  Serial.print("Temperature: ");
-  Serial.print(temperature);
-  Serial.println(" *C ");
-    Serial.println("-------------FIN Capteur A-------------");
-
-  Serial.println("-------------Capteur B-------------");
-  Serial.print("Humidity: ");
-  Serial.print(humidite_air_b);
-  Serial.println("");
-  Serial.print("Temperature: ");
-  Serial.print(temperature_b);
-  Serial.println(" *C ");
-      Serial.println("-------------FIN Capteur B-------------");
+   Serial.println((String)"humidite_air:"+humidite_air);
+  Serial.println((String)"temperature:"+temperature);
+  Serial.println((String)"humidite_air_b:"+humidite_air_b);
+  Serial.println((String)"temperature_b:"+temperature_b);
 
 }
 
 void loop() {
+  Serial.println("debut");
   commute();
   mesure();
   humiditeCapteur();
@@ -75,10 +62,8 @@ void loop() {
 
     // Attente
     case STATE_WAITING : {
-      Serial.print("Cycle ");
-      Serial.print(compteurCycles);
-      Serial.print(" Attente... ");
-      Serial.println(compteurSec);
+      Serial.println((String)"#Cycle "+compteurCycles);
+      Serial.println((String)"##Attente... "+compteurSec);
       if (compteurSec >= 20) {
         compteurSec = 0;
         compteurCycles++;
@@ -90,8 +75,7 @@ void loop() {
     // Mesurage sur base des dernières données
     case STATE_MEAS : {
       
-      Serial.print("\t humidite moyenne = ");
-      Serial.println(humidite);
+      Serial.println((String)"humidite_sol:"+humidite);
 
       if (humidite < 50) {
         state = STATE_WATER;
@@ -104,8 +88,7 @@ void loop() {
     
     // Arrosage
     case STATE_WATER : {
-      Serial.print("Arrosage en cours...");
-      Serial.println(compteurSec);
+      Serial.println((String)"## Arrosage en cours..."+compteurSec);
       digitalWrite(pinRelais,LOW);
       if (compteurSec > 40) {
         compteurSec = 0;
@@ -116,10 +99,11 @@ void loop() {
       break;
     }
     default : {
-      Serial.println("STATE DEFAULT");
+      Serial.println("##STATE DEFAULT");
     }
   } // switch
-    
+    Serial.println("fin");
+  
 } // loop
 
 
@@ -129,8 +113,7 @@ void mesure() {
   humidite = (humidite * 0.9) + (cur * 0.1);
   //Serial.print("cur = ");
   //Serial.print(cur);
-  Serial.print("\t humidite moyenne = ");
-  Serial.println(humidite);
+  Serial.println((String)"humidite moyenne:"+humidite);
 }
 
 
@@ -155,6 +138,6 @@ void setup() {
   Serial.begin(9600);
   pinMode(pinRelais, OUTPUT);
 
-  Serial.println("=======   Arduino Uno Wifi - Cambium   ==========");
+  Serial.println("##=======   Arduino Uno Wifi - Cambium   ==========");
 }
 
