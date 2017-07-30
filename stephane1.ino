@@ -121,7 +121,7 @@ void fsm() {
       Serial.print("Arrosage en cours...");
       Serial.println(compteurSec);
       digitalWrite(pinRelais,LOW);
-      if (compteurSec > 40) {
+      if (compteurSec > 200) {
         compteurSec = 0;
         state = STATE_WAITING;
         digitalWrite(pinRelais,HIGH);
