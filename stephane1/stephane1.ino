@@ -32,7 +32,7 @@ int state = STATE_WAITING;
 int pinRelais = 3;
 void luminositeCapteur(){
   luminosite = map(analogRead(pinLuminosite),8,800,0,100); //pourcentage entre les bornes
-  Serial.println((String)"luminosite: "+ luminosite);
+  Serial.println((String)"luminosite: "+ luminosite +" %");
   //les 2 et 3 e valeur de map sont a changer en fonction de la luminosite de cet endroit
 }
 //captuer luminosite + temperature
