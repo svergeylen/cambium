@@ -34,21 +34,20 @@ int state = STATE_WAITING;
 
 
 void loop() {
-  mesure();
-  Serial.print("Humidite sol = ");
-  Serial.println(humidite_sol);
-  Serial.print("Luminosité = ");
-  Serial.println(luminosite_ambiante);
-  
+  mesure());
+  Serial.println("debut");
+  Serial.println((String)"humidite_sol:"+humidite_sol);
+  Serial.println((String)"luminosite_ambiante:"+luminosite_ambiante);
   dht_serre();
-  Serial.println(humidite_serre);
-  Serial.println(temperature_serre);
+  Serial.println((String)"humidite_serre:"+humdite_serre);
+  Serial.println((String)"temperature_serre:"+temperature_serre);
   dht_ambiante();
-  Serial.println(humidite_ambiante);
-  Serial.println(temperature_ambiante);
+  Serial.println((String)"humidite_ambiante:"+humidite_ambiante);
+  Serial.println((String)"temperature_ambiante:"+temperature_ambiante");
   
   fsm();
   commute();
+  Serial.println("fin");
 }
 
 
@@ -69,8 +68,7 @@ void dht_serre() {
       humidite_serre = (float)DHT11.humidity;
   }
   else { 
-    Serial.print("DHT serre : erreur : "); 
-    Serial.println(chk);
+    Serial.print((String)"# DHT serre : erreur : "+chk);
   }  
 }
 
@@ -83,8 +81,7 @@ void dht_ambiante() {
       humidite_ambiante = (float)DHT11.humidity;
   }
   else { 
-    Serial.print("DHT ambiante : erreur : "); 
-    Serial.println(chk);
+    Serial.println((String)"# DHT ambiante : erreur : "+chk);
   }  
 }
 
@@ -93,10 +90,8 @@ void fsm() {
 
     // Attente
     case STATE_WAITING : {
-      Serial.print("Cycle ");
-      Serial.print(compteurCycles);
-      Serial.print(" Attente... ");
-      Serial.println(compteurSec);
+      Serial.println((String)"#Cycle "+compteurCycles);
+      Serial.println((String)" Attente... "+compteurSec);
       if (compteurSec >= 3600) {
         compteurSec = 0;
         compteurCycles++;
@@ -118,8 +113,7 @@ void fsm() {
     
     // Arrosage
     case STATE_WATER : {
-      Serial.print("Arrosage en cours...");
-      Serial.println(compteurSec);
+      Serial.print((String)"#Arrosage en cours..."+compteurSec);
       digitalWrite(pinRelais,LOW);
       if (compteurSec > 200) {
         compteurSec = 0;
@@ -129,7 +123,7 @@ void fsm() {
       break;
     }
     default : {
-      Serial.println("STATE DEFAULT");
+      Serial.println("# STATE DEFAULT");
     }
   } // switch
 }
@@ -152,7 +146,7 @@ void commute() {
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("=========   Arduino Uno Wifi - Cambium   ==========");
+  Serial.println("#=========   Arduino Uno Wifi - Cambium   ==========");
  
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(pinRelais, OUTPUT);
