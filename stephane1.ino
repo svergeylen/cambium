@@ -10,7 +10,7 @@ const int pin_humidite_sol = A0;
 const int pin_luminosite_ambiante = A1;
 
 // Sorties
-int pinRelais = 3;
+int pinRelais = 4;
 
 // Mesures
 float humidite_sol = 0;
@@ -19,7 +19,6 @@ int humidite_serre = 0;
 int temperature_ambiante = 0;
 int humidite_ambiante = 0;
 float luminosite_ambiante = 0;
-
 // Temp
 int toggle = 0;               // commute chaque seconde
 int compteurSec = 0;          // compteur de secondes
@@ -34,16 +33,16 @@ int state = STATE_WAITING;
 
 
 void loop() {
-  mesure());
+  mesure();
   Serial.println("debut");
   Serial.println((String)"humidite_sol:"+humidite_sol);
   Serial.println((String)"luminosite_ambiante:"+luminosite_ambiante);
   dht_serre();
-  Serial.println((String)"humidite_serre:"+humdite_serre);
+  Serial.println((String)"humidite_serre:"+humidite_serre);
   Serial.println((String)"temperature_serre:"+temperature_serre);
   dht_ambiante();
   Serial.println((String)"humidite_ambiante:"+humidite_ambiante);
-  Serial.println((String)"temperature_ambiante:"+temperature_ambiante");
+  Serial.println((String)"temperature_ambiante:"+temperature_ambiante);
   
   fsm();
   commute();
@@ -54,10 +53,11 @@ void loop() {
 
 void mesure() {
   float cur;
-  cur = map(analogRead(pin_humidite_sol), 0, 1023, 100, 0);
+  int temp = analogRead(pin_humidite_sol);
+  cur = map(temp, 0, 1023, 100, 0);
   humidite_sol = (humidite_sol * 0.9) + (cur * 0.1);
-  cur = map(analogRead(pin_luminosite_ambiante), 0, 1023, 0, 100);
-  luminosite_ambiante = (luminosite_ambiante * 0.9) + (cur * 0.1);
+  // cur = map(analogRead(pin_luminosite_ambiante), 0, 1023, 0, 100);
+  luminosite_ambiante = 0; //(luminosite_ambiante * 0.9) + (cur * 0.1);
 }
 
 // Humidité et température SERRE
@@ -68,7 +68,7 @@ void dht_serre() {
       humidite_serre = (float)DHT11.humidity;
   }
   else { 
-    Serial.print((String)"# DHT serre : erreur : "+chk);
+    Serial.println((String)"# DHT serre : erreur : "+chk);
   }  
 }
 
@@ -91,7 +91,7 @@ void fsm() {
     // Attente
     case STATE_WAITING : {
       Serial.println((String)"#Cycle "+compteurCycles);
-      Serial.println((String)" Attente... "+compteurSec);
+      Serial.println((String)"#Attente... "+compteurSec);
       if (compteurSec >= 3600) {
         compteurSec = 0;
         compteurCycles++;
@@ -113,7 +113,7 @@ void fsm() {
     
     // Arrosage
     case STATE_WATER : {
-      Serial.print((String)"#Arrosage en cours..."+compteurSec);
+      Serial.println((String)"#Arrosage en cours..."+compteurSec);
       digitalWrite(pinRelais,LOW);
       if (compteurSec > 200) {
         compteurSec = 0;
@@ -150,5 +150,6 @@ void setup() {
  
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(pinRelais, OUTPUT);
+  digitalWrite(pinRelais,HIGH);
 }
 
