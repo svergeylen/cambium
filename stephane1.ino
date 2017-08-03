@@ -34,6 +34,7 @@ const int STATE_WAITING = 0;
 const int STATE_MEAS = 1;
 const int STATE_WATER = 2;
 int state = STATE_WAITING;
+boolean arrosage_en_cours = false;
 
 
 void loop() {
@@ -105,13 +106,14 @@ void dht_ambiante() {
 }
 
 void fsm() {
+  arrosage_en_cours = false;
   switch (state) {
 
     // Attente
     case STATE_WAITING : {
       Serial.println((String)"#Cycle "+compteurCycles);
       Serial.println((String)"#Attente... "+compteurSec);
-      if (compteurSec >= 3600) {
+      if (compteurSec >= 10) {
         compteurSec = 0;
         compteurCycles++;
         state = STATE_MEAS;
@@ -132,6 +134,7 @@ void fsm() {
     
     // Arrosage
     case STATE_WATER : {
+      arrosage_en_cours = true;
       Serial.println((String)"#Arrosage en cours..."+compteurSec);
       digitalWrite(pinRelais,LOW);
       if (compteurSec > 200) {
@@ -145,6 +148,7 @@ void fsm() {
       Serial.println("# STATE DEFAULT");
     }
   } // switch
+  Serial.println((String)"arrose:"+arrosage_en_cours);
 }
 
 
