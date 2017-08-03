@@ -6,8 +6,10 @@ dht11 DHT11;
 #define DHT11_ambiante 3
 
 // Entrées analogiques
-const int pin_humidite_sol = A0;
-const int pin_luminosite_ambiante = A1;
+const int pin_humidite_sol = 0;
+const int pin_luminosite_ambiante = 1;
+const int pin_luminosite_ombre=2;
+const int pin_pluie = 3;
 
 // Sorties
 int pinRelais = 4;
@@ -19,6 +21,9 @@ int humidite_serre = 0;
 int temperature_ambiante = 0;
 int humidite_ambiante = 0;
 float luminosite_ambiante = 0;
+float luminosite_ombre=0;
+float pluie=0;
+boolean pluie_en_cours = false;
 // Temp
 int toggle = 0;               // commute chaque seconde
 int compteurSec = 0;          // compteur de secondes
@@ -31,12 +36,17 @@ const int STATE_WATER = 2;
 int state = STATE_WAITING;
 
 
-
 void loop() {
+
   mesure();
   Serial.println("debut");
   Serial.println((String)"humidite_sol:"+humidite_sol);
   Serial.println((String)"luminosite_ambiante:"+luminosite_ambiante);
+  Serial.println((String)"luminosite_ombre:"+luminosite_ombre);
+  Serial.println((String)"pluie:"+pluie);
+  Serial.println((String)"pluie_en_cours:"+pluie_en_cours);
+
+
   dht_serre();
   Serial.println((String)"humidite_serre:"+humidite_serre);
   Serial.println((String)"temperature_serre:"+temperature_serre);
@@ -57,7 +67,16 @@ void mesure() {
   cur = map(temp, 0, 1023, 100, 0);
   humidite_sol = (humidite_sol * 0.9) + (cur * 0.1);
   // cur = map(analogRead(pin_luminosite_ambiante), 0, 1023, 0, 100);
-  luminosite_ambiante = 0; //(luminosite_ambiante * 0.9) + (cur * 0.1);
+  //luminosite_ambiante = 0; //(luminosite_ambiante * 0.9) + (cur * 0.1);
+  luminosite_ambiante = map(analogRead(pin_luminosite_ambiante),98,900,0,100);
+  luminosite_ombre = map(analogRead(pin_luminosite_ombre),98,900,0,100);
+  pluie = map(analogRead(pin_pluie),0,1023,100,0);
+  if(pluie > 60){
+    pluie_en_cours= true;
+  }else{
+    pluie_en_cours = false;
+  }
+
 }
 
 // Humidité et température SERRE
