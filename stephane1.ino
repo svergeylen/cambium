@@ -123,7 +123,7 @@ void fsm() {
 
     // Decision d'arrosage ou non à ce moment précis
     case STATE_MEAS : {
-      if (humidite_sol < 50) {
+      if (humidite_sol < 50 and humidite_sol > 8 and luminosite_ambiante < 50) {
         state = STATE_WATER;
       }
       else {
