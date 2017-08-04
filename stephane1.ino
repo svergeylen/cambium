@@ -69,8 +69,8 @@ void mesure() {
   humidite_sol = (humidite_sol * 0.9) + (cur * 0.1);
   // cur = map(analogRead(pin_luminosite_ambiante), 0, 1023, 0, 100);
   //luminosite_ambiante = 0; //(luminosite_ambiante * 0.9) + (cur * 0.1);
-  luminosite_ambiante = map(analogRead(pin_luminosite_ambiante),98,900,0,100);
-  luminosite_ombre = map(analogRead(pin_luminosite_ombre),98,900,0,100);
+  luminosite_ambiante = map(analogRead(pin_luminosite_ambiante),0,1024,0,100);
+  luminosite_ombre = map(analogRead(pin_luminosite_ombre),0,1024,0,100);
   pluie = map(analogRead(pin_pluie),0,1023,100,0);
   if(pluie > 60){
     pluie_en_cours= true;
