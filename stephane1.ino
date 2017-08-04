@@ -113,7 +113,7 @@ void fsm() {
     case STATE_WAITING : {
       Serial.println((String)"#Cycle "+compteurCycles);
       Serial.println((String)"#Attente... "+compteurSec);
-      if (compteurSec >= 10) {
+      if (compteurSec >= 600) {
         compteurSec = 0;
         compteurCycles++;
         state = STATE_MEAS;
@@ -137,7 +137,7 @@ void fsm() {
       arrosage_en_cours = true;
       Serial.println((String)"#Arrosage en cours..."+compteurSec);
       digitalWrite(pinRelais,LOW);
-      if (compteurSec > 200) {
+      if (compteurSec > 600) {
         compteurSec = 0;
         state = STATE_WAITING;
         digitalWrite(pinRelais,HIGH);
